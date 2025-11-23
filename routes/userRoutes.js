@@ -1,15 +1,16 @@
 import express from "express";
 import { getAllUsers, updateUser, deleteUser } from "../controller/quiz_app.js";
+import { authenticateToken } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// Get all users
-router.get("/", getAllUsers);
+// Get all users - Protected
+router.get("/", authenticateToken, getAllUsers);
 
-// Update user
-router.put("/:userId", updateUser);
+// Update user - Protected
+router.put("/:userId", authenticateToken, updateUser);
 
-// Delete user
-router.delete("/:userId", deleteUser);
+// Delete user - Protected
+router.delete("/:userId", authenticateToken, deleteUser);
 
 export default router;

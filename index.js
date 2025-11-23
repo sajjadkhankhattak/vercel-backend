@@ -49,7 +49,20 @@ app.get('/', (req, res) => {
   res.json({ 
     message: "Server is working! 🎉",
     database: mongoose.connection.readyState === 1 ? "Connected" : "Disconnected",
+    databaseState: {
+      0: 'Disconnected',
+      1: 'Connected', 
+      2: 'Connecting',
+      3: 'Disconnecting'
+    }[mongoose.connection.readyState],
     cors: "CORS enabled for all origins",
+    environment: {
+      nodeEnv: process.env.NODE_ENV,
+      port: process.env.PORT,
+      hasMongoUri: !!process.env.MONGODB_URI,
+      hasDatabaseUrl: !!process.env.DATABASE_URL,
+      hasJwtSecret: !!process.env.JWT_SECRET
+    },
     timestamp: new Date().toISOString()
   });
 });
@@ -70,14 +83,28 @@ app.get('/health', (req, res) => {
 });
 
 // MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://sajjadkhan:123@cluster0.zof6ban.mongodb.net/quiz_app?retryWrites=true&w=majority";
+const MONGODB_URI = process.env.MONGODB_URI || process.env.DATABASE_URL || "mongodb+srv://sajjadkhan:123@cluster0.zof6ban.mongodb.net/quiz_app?retryWrites=true&w=majority";
 
-mongoose.connect(MONGODB_URI)
+console.log('🔍 Environment Check:');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('PORT:', process.env.PORT);
+console.log('MONGODB_URI present:', !!process.env.MONGODB_URI);
+console.log('DATABASE_URL present:', !!process.env.DATABASE_URL);
+console.log('JWT_SECRET present:', !!process.env.JWT_SECRET);
+
+mongoose.connect(MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 10000, // 10 seconds
+  socketTimeoutMS: 45000, // 45 seconds
+})
   .then(() => {
-    console.log('✅ Connected to MongoDB');
+    console.log('✅ Connected to MongoDB successfully');
+    console.log('📊 Database:', mongoose.connection.db.databaseName);
   })
   .catch((error) => {
     console.log('❌ MongoDB connection error:', error.message);
+    console.log('🔗 Connection string used:', MONGODB_URI.replace(/\/\/[^:]*:[^@]*@/, '//***:***@'));
   });
 
 // MongoDB connection events

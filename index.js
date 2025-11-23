@@ -12,43 +12,28 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// CORS Configuration
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    // Define allowed origins
-    const allowedOrigins = [
-      'http://localhost:5173',
-      'http://localhost:3000',
-      'https://vercel-frontend-eta-ten.vercel.app',
-      'https://vercel-frontend-sajjadkhankhattak.vercel.app'
-    ];
-    
-    // Allow all Vercel deployed apps
-    if (origin.includes('vercel.app')) {
-      return callback(null, true);
-    }
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.log('Blocked by CORS:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+// Simple and effective CORS configuration
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  // Handle preflight OPTIONS requests
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
+
+// Backup CORS using cors package
+app.use(cors({
+  origin: true, // Allow all origins
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
-  optionsSuccessStatus: 200
-};
-
-// Middleware
-app.use(cors(corsOptions));
-
-// Add pre-flight OPTIONS handler
-app.options('*', cors(corsOptions));
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With']
+}));
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -63,8 +48,25 @@ app.use('/api/stripe', stripeRoutes);
 app.get('/', (req, res) => {
   res.json({ 
     message: "Server is working! 🎉",
-    database: mongoose.connection.readyState === 1 ? "Connected" : "Disconnected"
+    database: mongoose.connection.readyState === 1 ? "Connected" : "Disconnected",
+    cors: "CORS enabled for all origins",
+    timestamp: new Date().toISOString()
   });
+});
+
+// CORS test route
+app.get('/test-cors', (req, res) => {
+  res.json({
+    message: "CORS test successful!",
+    origin: req.headers.origin,
+    method: req.method,
+    headers: req.headers
+  });
+});
+
+// Health check route
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
 // MongoDB Connection

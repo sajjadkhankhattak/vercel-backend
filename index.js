@@ -29,7 +29,12 @@ app.use((req, res, next) => {
 
 // Backup CORS using cors package
 app.use(cors({
-  origin: true, // Allow all origins
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://vercel-frontend-eta-ten.vercel.app', // Your live frontend
+    'https://vercel-frontend-sajjadkhankhattak.vercel.app'
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With']

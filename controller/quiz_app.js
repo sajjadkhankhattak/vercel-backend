@@ -209,20 +209,25 @@ export const updateQuiz = async (req, res) => {
 
     // Parse questions if they come as string (from FormData)
     let parsedQuestions;
-    try {
-      parsedQuestions = typeof questions === 'string' ? JSON.parse(questions) : questions;
-    } catch (parseError) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid questions format"
-      });
-    }
-
-    if (!parsedQuestions || parsedQuestions.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "At least one question is required"
-      });
+    if (questions) {
+      try {
+        parsedQuestions = typeof questions === 'string' ? JSON.parse(questions) : questions;
+        
+        if (parsedQuestions && parsedQuestions.length === 0) {
+          return res.status(400).json({
+            success: false,
+            message: "At least one question is required when updating questions"
+          });
+        }
+      } catch (parseError) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid questions format"
+        });
+      }
+    } else {
+      // If no questions provided, keep existing questions
+      parsedQuestions = existingQuiz.questions;
     }
 
     // Handle image upload if provided

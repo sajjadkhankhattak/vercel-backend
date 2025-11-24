@@ -62,7 +62,15 @@ const quizSchema = new mongoose.Schema({
   tags:        { type: [String] },
   duration:    { type: Number },
   difficulty:  { type: String },
-  questions:   { type: [questionSchema], required: true }
+  questions:   { type: [questionSchema], required: true },
+  image:       { 
+    type: String, // Store as base64 string or URL
+    required: false 
+  },
+  imageType:   { 
+    type: String, // Store MIME type (image/jpeg, image/png, etc.)
+    required: false 
+  }
 }, { timestamps: true });
 
 export const User = mongoose.model('User', userSchema);

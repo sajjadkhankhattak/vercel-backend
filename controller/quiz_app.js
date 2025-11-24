@@ -1,11 +1,15 @@
 import { User, Quiz } from '../models/quiz_app.js';
+import { convertToBase64, validateImage } from '../middleware/upload.js';
 
-// CREATE QUIZ - Save quiz to MongoDB
+// CREATE QUIZ - Save quiz to MongoDB with optional image
 export const createQuiz = async (req, res) => {
   try {
     const { title, description, category, tags, duration, difficulty, questions } = req.body;
+    let image = null;
+    let imageType = null;
     
     console.log("✅ CREATE QUIZ - Received:", req.body);
+    console.log("✅ CREATE QUIZ - File:", req.file ? 'Image attached' : 'No image');
 
     // Validate required fields
     if (!title || !category || !questions || questions.length === 0) {
@@ -13,6 +17,23 @@ export const createQuiz = async (req, res) => {
         success: false,
         message: "Title, category, and at least one question are required"
       });
+    }
+
+    // Handle image upload if provided
+    if (req.file) {
+      const validation = validateImage(req.file);
+      if (!validation.isValid) {
+        return res.status(400).json({
+          success: false,
+          message: validation.error
+        });
+      }
+
+      // Convert image to base64
+      image = convertToBase64(req.file.buffer, req.file.mimetype);
+      imageType = req.file.mimetype;
+      
+      console.log(`✅ Image processed: ${req.file.mimetype}, Size: ${Math.round(req.file.size / 1024)}KB`);
     }
 
     // Create quiz in MongoDB
@@ -23,7 +44,8 @@ export const createQuiz = async (req, res) => {
       tags,
       duration,
       difficulty,
-      questions
+      questions,
+      ...(image && { image, imageType })
     });
 
     const savedQuiz = await newQuiz.save();

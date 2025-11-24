@@ -59,7 +59,8 @@ export const authenticateToken = async (req, res, next) => {
 
 // List of admin email addresses - UPDATE THIS LIST
 const ADMIN_EMAILS = [
-  'admin@quizapp.com',        // Add your admin emails here
+  'stylishkhan760@gmail.com',   // Current user - ADDED
+  'admin@quizapp.com',          // Add your admin emails here
   'sajjadkhankhattak@gmail.com' // Add more admin emails as needed
 ];
 

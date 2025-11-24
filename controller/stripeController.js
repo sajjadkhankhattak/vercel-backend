@@ -8,18 +8,32 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 // Create a payment intent for quiz premium features
 export const createPaymentIntent = async (req, res) => {
   try {
-    console.log('Creating payment intent with:', req.body);
-    console.log('Authenticated user:', req.user); // Now we have access to authenticated user
+    console.log('=== CREATE PAYMENT INTENT REQUEST ===');
+    console.log('Request body:', req.body);
+    console.log('Authenticated user:', req.user);
+    console.log('Stripe key exists:', !!process.env.STRIPE_SECRET_KEY);
+    console.log('Stripe key prefix:', process.env.STRIPE_SECRET_KEY?.substring(0, 7));
+
     const { amount, currency = 'usd', metadata = {} } = req.body;
 
     if (!amount || amount < 0.50) {
-      console.log('Amount validation failed:', amount);
+      console.log('❌ Amount validation failed:', amount);
       return res.status(400).json({ 
+        success: false,
         error: 'Amount must be at least $0.50 USD' 
       });
     }
 
-    console.log('Creating Stripe payment intent for amount:', amount);
+    if (!process.env.STRIPE_SECRET_KEY) {
+      console.error('❌ STRIPE_SECRET_KEY not configured');
+      return res.status(500).json({
+        success: false,
+        error: 'Payment system not configured'
+      });
+    }
+
+    console.log('✅ Creating Stripe payment intent for amount:', amount);
+    
     // Create payment intent
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100), // Convert to cents
@@ -29,13 +43,14 @@ export const createPaymentIntent = async (req, res) => {
       },
       metadata: {
         quiz_app: 'true',
-        user_id: req.user ? req.user._id.toString() : 'anonymous', // Use actual authenticated user ID
+        user_id: req.user ? req.user._id.toString() : 'anonymous',
         user_email: req.user ? req.user.email : 'anonymous',
         ...metadata
       }
     });
 
-    console.log('Payment intent created successfully:', paymentIntent.id);
+    console.log('✅ Payment intent created successfully:', paymentIntent.id);
+    
     res.status(200).json({
       success: true,
       client_secret: paymentIntent.client_secret,
@@ -43,10 +58,17 @@ export const createPaymentIntent = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error creating payment intent:', error);
+    console.error('❌ Error creating payment intent:', {
+      message: error.message,
+      type: error.type,
+      code: error.code,
+      stack: error.stack
+    });
+    
     res.status(500).json({ 
+      success: false,
       error: 'Failed to create payment intent',
-      details: error.message 
+      details: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 };

@@ -15,7 +15,23 @@ router.get('/test', (req, res) => {
   res.json({
     message: 'Stripe routes are working!',
     timestamp: new Date().toISOString(),
-    hasStripeKey: !!process.env.STRIPE_SECRET_KEY
+    hasStripeKey: !!process.env.STRIPE_SECRET_KEY,
+    stripeKeyPrefix: process.env.STRIPE_SECRET_KEY ? process.env.STRIPE_SECRET_KEY.substring(0, 7) : 'NOT_SET',
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// Test auth endpoint
+router.get('/test-auth', authenticateToken, (req, res) => {
+  res.json({
+    message: 'Authentication working!',
+    user: {
+      id: req.user._id,
+      email: req.user.email,
+      firstName: req.user.firstName,
+      lastName: req.user.lastName
+    },
+    timestamp: new Date().toISOString()
   });
 });
 

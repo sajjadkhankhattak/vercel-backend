@@ -6,7 +6,7 @@ import { generateToken } from '../middleware/auth.js';
 const ADMIN_EMAILS = [
   'stylishkhan760@gmail.com',   // Current user
   'admin@quizapp.com',          // Add your admin emails here  
-  'sajjadkhankhattak@gmail.com' // Add more admin emails as needed
+  'sajjadkhan@gmail.com' // Add more admin emails as needed
 ];
 
 // SIGNUP - Create new user in MongoDB

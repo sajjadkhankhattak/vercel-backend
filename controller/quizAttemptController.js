@@ -142,7 +142,7 @@ export const getQuizAttemptResult = async (req, res) => {
       
       return {
         questionId: userAnswer.questionId,
-        question: question?.question || 'Question not found',
+        question: question?.questionText || question?.question || 'Question not found',
         options: question?.options || [],
         userAnswer: userAnswer.selectedAnswer,
         correctAnswer: question?.correctAnswer,

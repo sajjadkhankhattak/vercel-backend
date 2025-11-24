@@ -1,5 +1,5 @@
 import QuizAttempt from '../models/QuizAttempt.js';
-import Quiz from '../models/quiz_app.js';
+import { Quiz } from '../models/quiz_app.js';
 import mongoose from 'mongoose';
 
 // SUBMIT QUIZ ATTEMPT

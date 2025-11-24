@@ -10,58 +10,101 @@ export const createQuiz = async (req, res) => {
     
     console.log("✅ CREATE QUIZ - Received:", req.body);
     console.log("✅ CREATE QUIZ - File:", req.file ? 'Image attached' : 'No image');
+    console.log("✅ CREATE QUIZ - User:", req.user?.email);
 
     // Validate required fields
-    if (!title || !category || !questions || questions.length === 0) {
+    if (!title || !category) {
+      console.log("❌ Missing required fields:", { title: !!title, category: !!category });
       return res.status(400).json({
         success: false,
-        message: "Title, category, and at least one question are required"
+        message: "Title and category are required"
+      });
+    }
+
+    // Parse questions if they come as string (from FormData)
+    let parsedQuestions;
+    try {
+      parsedQuestions = typeof questions === 'string' ? JSON.parse(questions) : questions;
+    } catch (parseError) {
+      console.log("❌ Questions parsing error:", parseError);
+      return res.status(400).json({
+        success: false,
+        message: "Invalid questions format"
+      });
+    }
+
+    if (!parsedQuestions || parsedQuestions.length === 0) {
+      console.log("❌ No questions provided");
+      return res.status(400).json({
+        success: false,
+        message: "At least one question is required"
       });
     }
 
     // Handle image upload if provided
     if (req.file) {
-      const validation = validateImage(req.file);
-      if (!validation.isValid) {
-        return res.status(400).json({
+      try {
+        const validation = validateImage(req.file);
+        if (!validation.isValid) {
+          console.log("❌ Image validation failed:", validation.error);
+          return res.status(400).json({
+            success: false,
+            message: validation.error
+          });
+        }
+
+        // Convert image to base64
+        image = convertToBase64(req.file.buffer, req.file.mimetype);
+        imageType = req.file.mimetype;
+        
+        console.log(`✅ Image processed: ${req.file.mimetype}, Size: ${Math.round(req.file.size / 1024)}KB`);
+      } catch (imageError) {
+        console.log("❌ Image processing error:", imageError);
+        return res.status(500).json({
           success: false,
-          message: validation.error
+          message: "Failed to process image"
         });
       }
-
-      // Convert image to base64
-      image = convertToBase64(req.file.buffer, req.file.mimetype);
-      imageType = req.file.mimetype;
-      
-      console.log(`✅ Image processed: ${req.file.mimetype}, Size: ${Math.round(req.file.size / 1024)}KB`);
     }
 
     // Create quiz in MongoDB
-    const newQuiz = new Quiz({
-      title,
-      description,
-      category,
-      tags,
-      duration,
-      difficulty,
-      questions,
-      ...(image && { image, imageType })
-    });
+    try {
+      const newQuiz = new Quiz({
+        title,
+        description,
+        category,
+        tags: typeof tags === 'string' ? JSON.parse(tags || '[]') : (tags || []),
+        duration,
+        difficulty,
+        questions: parsedQuestions,
+        ...(image && { image, imageType })
+      });
 
-    const savedQuiz = await newQuiz.save();
-    
-    res.status(201).json({
-      success: true,
-      message: "Quiz created successfully!",
-      quiz: savedQuiz
-    });
+      console.log("✅ Attempting to save quiz to database...");
+      const savedQuiz = await newQuiz.save();
+      console.log("✅ Quiz saved successfully:", savedQuiz._id);
+      
+      res.status(201).json({
+        success: true,
+        message: "Quiz created successfully!",
+        quiz: savedQuiz
+      });
+    } catch (dbError) {
+      console.log("❌ Database save error:", dbError);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to save quiz to database",
+        error: dbError.message
+      });
+    }
 
   } catch (error) {
     console.error("❌ Create quiz error:", error);
     res.status(500).json({
       success: false,
       message: "Failed to create quiz",
-      error: error.message
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };

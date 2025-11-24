@@ -57,15 +57,42 @@ export const authenticateToken = async (req, res, next) => {
   }
 };
 
-// Middleware to check if user is admin (optional)
+// List of admin email addresses - UPDATE THIS LIST
+const ADMIN_EMAILS = [
+  'admin@quizapp.com',        // Add your admin emails here
+  'sajjadkhankhattak@gmail.com' // Add more admin emails as needed
+];
+
+// Middleware to check if user is admin based on email
 export const requireAdmin = (req, res, next) => {
-  if (!req.user || !req.user.isAdmin) {
-    return res.status(403).json({
+  try {
+    // Check if user exists
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required'
+      });
+    }
+
+    // Check if user email is in admin list
+    if (!ADMIN_EMAILS.includes(req.user.email)) {
+      console.log(`🔒 Admin access denied for email: ${req.user.email}`);
+      return res.status(403).json({
+        success: false,
+        message: 'Admin access denied. Only authorized administrators can access this resource.',
+        userEmail: req.user.email
+      });
+    }
+
+    console.log(`✅ Admin access granted for email: ${req.user.email}`);
+    next();
+  } catch (error) {
+    console.error('Admin validation error:', error);
+    res.status(500).json({
       success: false,
-      message: 'Admin access required'
+      message: 'Admin validation failed'
     });
   }
-  next();
 };
 
 // Generate JWT token

@@ -2,6 +2,13 @@ import { User } from '../models/quiz_app.js';
 import bcrypt from 'bcryptjs';
 import { generateToken } from '../middleware/auth.js';
 
+// List of admin email addresses - KEEP THIS IN SYNC WITH MIDDLEWARE
+const ADMIN_EMAILS = [
+  'stylishkhan760@gmail.com',   // Current user
+  'admin@quizapp.com',          // Add your admin emails here  
+  'sajjadkhankhattak@gmail.com' // Add more admin emails as needed
+];
+
 // SIGNUP - Create new user in MongoDB
 export const signup = async (req, res) => {
   try {
@@ -150,6 +157,9 @@ export const getCurrentUser = async (req, res) => {
       });
     }
 
+    // Check if user is admin
+    const isAdmin = ADMIN_EMAILS.includes(user.email);
+
     res.json({
       success: true,
       message: 'User profile fetched successfully',
@@ -158,7 +168,8 @@ export const getCurrentUser = async (req, res) => {
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
-        createdAt: user.createdAt
+        createdAt: user.createdAt,
+        isAdmin: isAdmin
       }
     });
 
@@ -167,6 +178,37 @@ export const getCurrentUser = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch user profile',
+      error: error.message
+    });
+  }
+};
+
+// CHECK ADMIN STATUS - Protected route
+export const checkAdminStatus = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    const isAdmin = ADMIN_EMAILS.includes(user.email);
+
+    res.json({
+      success: true,
+      isAdmin: isAdmin,
+      email: user.email,
+      message: isAdmin ? 'User has admin access' : 'User does not have admin access'
+    });
+
+  } catch (error) {
+    console.error('❌ Check admin status error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to check admin status',
       error: error.message
     });
   }

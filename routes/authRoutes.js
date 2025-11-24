@@ -1,5 +1,5 @@
 import express from "express";
-import { signup, login, getCurrentUser } from "../controller/authController.js";
+import { signup, login, getCurrentUser, checkAdminStatus } from "../controller/authController.js";
 import { authenticateToken } from "../middleware/auth.js";
 
 const router = express.Router();
@@ -8,5 +8,6 @@ const router = express.Router();
 router.post("/signup", signup);
 router.post("/login", login);
 router.get("/profile", authenticateToken, getCurrentUser); // Protected route to get current user
+router.get("/admin-status", authenticateToken, checkAdminStatus); // Protected route to check admin status
 
 export default router;

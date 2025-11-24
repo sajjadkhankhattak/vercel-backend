@@ -4,6 +4,7 @@ import cors from 'cors';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import quizRoutes from './routes/quizRoutes.js';
+import quizAttemptRoutes from './routes/quizAttemptRoutes.js';
 import stripeRoutes from './routes/stripeRoutes.js';
 import dotenv from 'dotenv';
 
@@ -70,6 +71,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/quiz', quizRoutes);
+app.use('/api/quiz-attempts', quizAttemptRoutes);
 app.use('/api/stripe', stripeRoutes);
 
 // Root route

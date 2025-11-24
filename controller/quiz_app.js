@@ -1,5 +1,16 @@
 import { User, Quiz } from '../models/quiz_app.js';
-import { convertToBase64, validateImage } from '../middleware/upload.js';
+
+// Try to import upload functions, but handle gracefully if missing
+let convertToBase64, validateImage;
+try {
+  const uploadModule = await import('../middleware/upload.js');
+  convertToBase64 = uploadModule.convertToBase64;
+  validateImage = uploadModule.validateImage;
+} catch (error) {
+  console.log("⚠️ Upload middleware not available, image uploads will be disabled");
+  convertToBase64 = null;
+  validateImage = () => ({ isValid: false, error: 'Image upload not available' });
+}
 
 // CREATE QUIZ - Save quiz to MongoDB with optional image
 export const createQuiz = async (req, res) => {
@@ -44,6 +55,14 @@ export const createQuiz = async (req, res) => {
     // Handle image upload if provided
     if (req.file) {
       try {
+        if (!validateImage || !convertToBase64) {
+          console.log("❌ Image upload functions not available");
+          return res.status(500).json({
+            success: false,
+            message: "Image upload is temporarily unavailable"
+          });
+        }
+
         const validation = validateImage(req.file);
         if (!validation.isValid) {
           console.log("❌ Image validation failed:", validation.error);
@@ -62,7 +81,7 @@ export const createQuiz = async (req, res) => {
         console.log("❌ Image processing error:", imageError);
         return res.status(500).json({
           success: false,
-          message: "Failed to process image"
+          message: "Failed to process image: " + imageError.message
         });
       }
     }

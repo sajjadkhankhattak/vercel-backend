@@ -9,10 +9,17 @@ const router = express.Router();
 router.post("/", 
   authenticateToken, 
   requireAdmin, 
-  uploadImage, 
-  handleUploadError, 
+  (req, res, next) => {
+    // Try upload middleware, but continue if it fails
+    try {
+      uploadImage(req, res, next);
+    } catch (error) {
+      console.log("⚠️ Upload middleware error, continuing without file:", error.message);
+      next();
+    }
+  },
   createQuiz
-); // Protected: Admin only can create quizzes with optional image
+);
 
 router.get("/", getQuizzes); // Public: Anyone can view quizzes
 

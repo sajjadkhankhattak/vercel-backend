@@ -61,7 +61,7 @@ export const authenticateToken = async (req, res, next) => {
 const ADMIN_EMAILS = [
   'stylishkhan760@gmail.com',   // Current user - ADDED
   'admin@quizapp.com',          // Add your admin emails here
-  'sajjadkhankhattak@gmail.com' // Add more admin emails as needed
+  'sajjadkhan@gmail.com' // Add more admin emails as needed
 ];
 
 // Middleware to check if user is admin based on email

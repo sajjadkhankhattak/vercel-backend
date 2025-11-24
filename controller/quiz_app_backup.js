@@ -289,37 +289,3 @@ export const deleteUser = async (req, res) => {
     });
   }
 };
-
-// // TEST ENDPOINT - For testing button clicks
-// export const testQuizEndpoint = async (req, res) => {
-//   try {
-//     const { quizId, quizTitle, category, action, timestamp, message } = req.body;
-
-//     console.log("✅ TEST ENDPOINT - Received data:", req.body);
-
-//     // Simple response to confirm data was received
-//     res.json({
-//       success: true,
-//       message: "Data received successfully!",
-//       receivedData: {
-//         quizId,
-//         quizTitle,
-//         category,
-//         action,
-//         timestamp,
-//         message
-//       },
-//       serverMessage: "Hello from backend! Your data has been received.",
-//       status: "Data reached backend successfully!"
-//     });
-
-//   } catch (error) {
-//     console.error("❌ Test endpoint error:", error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Failed to process request",
-//       error: error.message
- 
- / /   G E T   C U R R E N T   U S E R   P R O F I L E   -   P r o t e c t e d   r o u t e  
- e x p o r t   c o n s t   g e t C u r r e n t U s e r   =   a s y n c   ( r e q ,   r e s )   = >   {  
- 

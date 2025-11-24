@@ -190,33 +190,54 @@ export const getUserQuizHistory = async (req, res) => {
     const { limit = 10, page = 1 } = req.query;
 
     console.log("✅ GET HISTORY - User ID:", userId);
+    console.log("✅ GET HISTORY - Page:", page, "Limit:", limit);
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
+    // Check if user exists and is valid
+    if (!userId) {
+      console.log("❌ No user ID found in request");
+      return res.status(401).json({
+        success: false,
+        message: "User ID not found in token"
+      });
+    }
+
+    console.log("✅ Starting database query...");
+    
     const attempts = await QuizAttempt.find({ userId })
       .populate('quizId', 'title category image')
       .sort({ completedAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
 
+    console.log("✅ Database query completed. Raw attempts:", attempts);
+
     const totalAttempts = await QuizAttempt.countDocuments({ userId });
+    console.log("✅ Total attempts count:", totalAttempts);
+
+    console.log("✅ Found attempts:", attempts.length, "Total:", totalAttempts);
 
     res.json({
       success: true,
-      attempts: attempts.map(attempt => ({
-        attemptId: attempt._id,
-        quiz: {
-          id: attempt.quizId._id,
-          title: attempt.quizId.title,
-          category: attempt.quizId.category,
-          image: attempt.quizId.image
-        },
-        score: attempt.score,
-        percentage: Math.round((attempt.correctAnswers / attempt.totalQuestions) * 100),
-        timeSpent: attempt.timeSpent,
-        attemptNumber: attempt.attemptNumber,
-        completedAt: attempt.completedAt
-      })),
+      attempts: attempts.map(attempt => {
+        // Handle cases where quiz might be deleted
+        const quiz = attempt.quizId || {};
+        return {
+          attemptId: attempt._id,
+          quiz: {
+            id: quiz._id || 'unknown',
+            title: quiz.title || 'Quiz no longer available',
+            category: quiz.category || 'Unknown',
+            image: quiz.image || null
+          },
+          score: attempt.score,
+          percentage: Math.round((attempt.correctAnswers / attempt.totalQuestions) * 100),
+          timeSpent: attempt.timeSpent,
+          attemptNumber: attempt.attemptNumber,
+          completedAt: attempt.completedAt
+        };
+      }),
       pagination: {
         currentPage: parseInt(page),
         totalPages: Math.ceil(totalAttempts / parseInt(limit)),
@@ -228,10 +249,11 @@ export const getUserQuizHistory = async (req, res) => {
 
   } catch (error) {
     console.error("❌ Get user quiz history error:", error);
+    console.error("❌ Error stack:", error.stack);
     res.status(500).json({
       success: false,
       message: "Failed to get quiz history",
-      error: error.message
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 };

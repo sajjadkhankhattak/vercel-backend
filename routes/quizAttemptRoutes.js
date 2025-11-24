@@ -13,6 +13,29 @@ const router = express.Router();
 // All routes require authentication
 router.use(authenticateToken);
 
+// Test endpoint for debugging
+router.get("/test", async (req, res) => {
+  try {
+    const mongoose = await import('mongoose');
+    const db = mongoose.default.connection;
+    
+    res.json({
+      success: true,
+      message: "Quiz attempts routes working",
+      userId: req.user.id,
+      dbState: db.readyState,
+      dbName: db.db?.databaseName || "unknown",
+      collections: await db.db?.listCollections().toArray() || []
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Test failed",
+      error: error.message
+    });
+  }
+});
+
 // Quiz Attempt Routes
 // Submit quiz attempt
 router.post("/:quizId/submit", submitQuizAttempt);
